@@ -218,11 +218,13 @@
 
             const response = await fetch(API_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" }, // 這裡要加 Header 告訴 Vercel 這是 JSON
                 body: JSON.stringify({ 
                     geometry: geometry,
                     date: document.getElementById('datePicker').value,
-                    preference: document.getElementById('prefInput').value
+                    preference: document.getElementById('prefInput').value,
+                    // 👇👇👇 新增這兩行：把起點座標傳過去 👇👇👇
+                    lat: startCoord.lat,
+                    lng: startCoord.lon
                 }) 
             });
 
