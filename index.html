@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>即時活動推薦導航</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: "Microsoft JhengHei", sans-serif; background: #f8f9fa; }
+        #map { height: 100vh; width: 100%; z-index: 0;}
+        
+        /* 🌟 面板樣式優化：加大、更長 */
+        #panel {
+            position: absolute; top: 15px; left: 15px; z-index: 1000;
+            background: white; padding: 20px; border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15); 
+            width: 360px; /* 加寬 */
+            height: 90vh; /* 強制高度佔螢幕 90% */
+            display: flex; flex-direction: column; /* 讓內部元件垂直排列 */
+            border: 1px solid #fff;
+        }
+        
+        /* 標題與登入區 */
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        h3 { margin: 0; color: #2c3e50; font-size: 18px; font-weight: 800; }
+        
+        /* 輸入框優化 */
+        .control-group { margin-bottom: 10px; }
+        input[type="text"], input[type="date"], select { 
+            width: 100%; padding: 12px; margin-bottom: 8px; 
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+            background: #fcfcfc; font-size: 14px;
+        }
+        input:focus, select:focus { outline: none; border-color: #2196F3; background: white; }
+        
+        /* 搜尋按鈕 (改成專業藍色) */
+        button#btn { 
+            width: 100%; padding: 14px; margin-top: 5px;
+            background: linear-gradient(135deg, #2196F3, #1976D2); 
+            color: white; border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: bold; font-size: 15px;
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+            transition: transform 0.1s;
+            flex-shrink: 0; /* 防止按鈕被壓縮 */
+        }
+        button#btn:active { transform: scale(0.98); }
+        button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+
+        /* 🌟 列表區域優化：填滿剩餘空間、好滑動 */
+        #list-container {
+            flex-grow: 1; /* 自動填滿剩餘高度 */
+            overflow-y: auto; /* 內容多時出現捲軸 */
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-right: 5px; /* 避免捲軸擋住文字 */
+        }
+        
+        /* AI 推薦區塊 */
+        #ai-box { margin-bottom: 10px; display: none; }
+        .ai-title {
+            font-size: 13px; color: #2e7d32; font-weight: 900;
+            margin: 10px 0 8px 0; display: flex; align-items: center;
+        }
+        .ai-card {
+            background: white; border: 1px solid #a5d6a7;
+            border-radius: 8px; margin-bottom: 8px; overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .ai-header {
+            padding: 12px; cursor: pointer; font-size: 14px;
+            font-weight: bold; color: #1b5e20;
+            display: flex; justify-content: space-between; align-items: center;
+            background: #e8f5e9;
+        }
+        .ai-header:hover { background-color: #c8e6c9; }
+        .ai-header::after { content: '▼'; font-size: 10px; color: #4caf50; }
+        .ai-reason {
+            padding: 12px; font-size: 14px; color: #444;
+            background: #fff; border-top: 1px dashed #a5d6a7;
+            display: none; line-height: 1.5;
+        }
+        .ai-card.active .ai-reason { display: block; }
+        .ai-card.active .ai-header::after { transform: rotate(180deg); }
+
+        /* 一般列表項目 */
+        #status { margin-top: 10px; color: #666; font-size: 13px; text-align: center; flex-shrink: 0;}
+        
+        .item { 
+            padding: 15px 10px; /* 加大點擊範圍 */
+            border-bottom: 1px solid #f0f0f0; 
+            cursor: pointer; display: flex; align-items: flex-start; 
+            transition: background 0.2s;
+        }
+        .item:hover { background: #f5f9ff; }
+        
+        .dist-badge {
+            background: #607d8b; color: white;
+            font-size: 11px; padding: 4px 8px; border-radius: 6px;
+            margin-right: 12px; min-width: 45px; text-align: center;
+            font-weight: 700; margin-top: 2px;
+        }
+        .info { flex-grow: 1; }
+        .info b { color: #2c3e50; display: block; margin-bottom: 5px; font-size: 15px; }
+        .info small { color: #7f8c8d; display: block; font-size: 13px; margin-bottom: 3px; }
+        .nav-link { color: #2196F3; text-decoration: none; font-size: 13px; font-weight: bold; margin-top: 5px; display: inline-block;}
+        
+        /* 捲軸美化 */
+        #list-container::-webkit-scrollbar { width: 6px; }
+        #list-container::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 3px; }
+        #list-container::-webkit-scrollbar-track { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+
+<div id="panel">
+    <div class="header-row">
+        <h3>📅 即時活動推薦</h3>
+    </div>
+    
+    <input type="text" id="startInput" placeholder="🚩 起點 (例: 台北101)">
+    <input type="text" id="endInput" placeholder="🏁 終點 (例: 淡水老街)">
+    
+    <div style="display:flex; gap:10px;">
+        <input type="date" id="datePicker" style="flex:1">
+        <select id="prefInput" style="flex:1">
+            <option value="all">全部顯示</option>
+            <option value="音樂,演唱會,樂團,演奏,歌唱,派對,祭">🎵 音樂</option>
+            <option value="市集,擺攤,文創,嘉年華,夜市,攤位,商圈">🎪 市集</option>
+            <option value="展覽,藝文,美術,展演,畫展,攝影,藝術">🖼️ 展覽</option>
+            <option value="親子,兒童,寶寶,體驗,導覽,DIY,營,童">👶 親子</option>
+            <option value="花,賞螢,生態,自然,步道,螢火蟲,櫻花,桐花,落羽松">🌸 賞花</option>
+            <option value="節,慶,廟會,遶境,燈會,跨年,耶誕,聖誕">🏮 節慶</option>
+            <option value="運動,路跑,馬拉松,健走,單車,瑜珈,競賽">🏃 運動</option>
+        </select>
+    </div>
+
+    <button id="btn" onclick="startTrip()">🔍 搜尋沿途活動</button>
+    <div id="status">輸入地點開始規劃</div>
+    
+    <div id="list-container">
+        <div id="ai-box"></div>
+        <div id="list"></div>
+    </div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([23.97, 120.96], 8); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+    var layerGroup = L.layerGroup().addTo(map);
+    var routeLayer = null;
+
+    document.getElementById('datePicker').valueAsDate = new Date();
+
+    function formatDistance(km) {
+        if (km < 1) return Math.round(km * 1000) + "m";
+        return km.toFixed(1) + "km";
+    }
+
+    async function getCoordinates(address) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.length > 0) return { lat: data[0].lat, lon: data[0].lon };
+        throw new Error(`找不到「${address}」`);
+    }
+
+    async function startTrip() {
+        const btn = document.getElementById('btn');
+        const status = document.getElementById('status');
+        const list = document.getElementById('list');
+        const aiBox = document.getElementById('ai-box');
+        const startName = document.getElementById('startInput').value.trim();
+        const endName = document.getElementById('endInput').value.trim();
+
+        if (!startName || !endName) {
+            status.style.color = "#d32f2f";
+            status.innerText = "⚠️ 請輸入起點與終點";
+            return;
+        }
+
+        // UI 重置
+        btn.disabled = true;
+        btn.innerText = "資料分析中...";
+        list.innerHTML = "";
+        aiBox.style.display = "none";
+        layerGroup.clearLayers();
+        status.style.color = "#666";
+        status.innerText = "🔍 正在規劃路徑...";
+
+        try {
+            // 1. 轉座標
+            const startCoord = await getCoordinates(startName);
+            const endCoord = await getCoordinates(endName);
+
+            // 2. OSRM 路徑
+            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoord.lon},${startCoord.lat};${endCoord.lon},${endCoord.lat}?overview=full`;
+            const routeRes = await fetch(osrmUrl);
+            const routeData = await routeRes.json();
+            if (!routeData.routes.length) throw new Error("無法規劃路徑");
+            
+            const geometry = routeData.routes[0].geometry;
+            const coords = decodePolyline(geometry);
+            
+            if (routeLayer) map.removeLayer(routeLayer);
+            routeLayer = L.polyline(coords, {color: '#1976D2', weight: 6, opacity: 0.8}).addTo(map);
+            map.fitBounds(routeLayer.getBounds(), {padding: [50, 50]});
+            
+            L.marker([startCoord.lat, startCoord.lon]).addTo(layerGroup).bindPopup("起點");
+            L.marker([endCoord.lat, endCoord.lon]).addTo(layerGroup).bindPopup("終點");
+
+            status.innerText = "📡 正在搜尋沿途活動...";
+
+            // 3. 呼叫 n8n
+            /// 👇 改成呼叫我們剛剛寫的 Vercel API
+            const API_URL = "/api/proxy"; 
+
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }, // 這裡要加 Header 告訴 Vercel 這是 JSON
+                body: JSON.stringify({ 
+                    geometry: geometry,
+                    date: document.getElementById('datePicker').value,
+                    preference: document.getElementById('prefInput').value,
+                    history: userHistory 
+                }) 
+            });
+
+            if (!response.ok) throw new Error("連線失敗");
+            const finalData = await response.json();
+
+            // 4. 處理 AI 推薦 (專業風格)
+            if (finalData.ai_recommendation) {
+                let aiText = finalData.ai_recommendation;
+                try {
+                    if (typeof aiText === 'string') {
+                        aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+                        let aiJson = JSON.parse(aiText);
+                        if (!Array.isArray(aiJson)) aiJson = [aiJson];
+
+                        let aiHtml = `<div class="ai-title">✨ AI 精選推薦 (點擊查看詳情)</div>`;
+                        aiJson.forEach((rec, idx) => {
+                            aiHtml += `
+                                <div class="ai-card" onclick="this.classList.toggle('active')">
+                                    <div class="ai-header">
+                                        <span>${idx + 1}. ${rec.recommended_id}</span>
+                                    </div>
+                                    <div class="ai-reason">${rec.reason}</div>
+                                </div>`;
+                        });
+
+                        aiBox.innerHTML = aiHtml;
+                        aiBox.style.display = "block";
+                    }
+                } catch(e) { console.error(e); }
+            }
+
+            // 5. 渲染完整列表
+            const spots = finalData.spots || [];
+            if (spots.length === 0 || spots[0].category === "提示") {
+                status.style.color = "#e74c3c";
+                status.innerText = spots[0]?.name || "此路徑無符合活動";
+            } else {
+                status.style.color = "#2e7d32";
+                status.innerText = `🎉 已找到 ${spots.length} 個活動 (依距離排序)`;
+                let listHtml = "";
+                
+                spots.forEach((spot, index) => {
+                    if (!spot.lat) return;
+                    const googleMapUrl = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}`;
+                    const distText = formatDistance(spot.distance);
+
+                    const marker = L.marker([spot.lat, spot.lng])
+                        .bindPopup(`<b>${spot.name}</b><br>${spot.time}<br><a href="${googleMapUrl}" target="_blank">開啟導航</a>`)
+                        .addTo(layerGroup);
+                    
+                    window[`zoomTo${index}`] = () => {
+                        marker.openPopup();
+                        map.setView([spot.lat, spot.lng], 16);
+                    };
+
+                    listHtml += `
+                        <div class="item" onclick="zoomTo${index}()">
+                            <div class="dist-badge">${distText}</div>
+                            <div class="info">
+                                <b>${spot.name}</b>
+                                <small>📅 ${spot.time}</small>
+                                <small>📍 ${spot.location}</small>
+                                <a href="${googleMapUrl}" target="_blank" class="nav-link" onclick="event.stopPropagation()">↗ Google 導航</a>
+                            </div>
+                        </div>`;
+                });
+                list.innerHTML = listHtml;
+            }
+
+        } catch (e) {
+            console.error(e);
+            status.style.color = "red";
+            status.innerText = "訊息: " + e.message;
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "🔍 搜尋沿途活動";
+        }
+    }
+
+    function decodePolyline(str,precision){var index=0,lat=0,lng=0,coordinates=[],shift=0,result=0,byte=null,latitude_change,longitude_change,factor=Math.pow(10,precision||5);while(index<str.length){byte=null;shift=0;result=0;do{byte=str.charCodeAt(index++)-63;result|=(byte&0x1f)<<shift;shift+=5}while(byte>=0x20);latitude_change=((result&1)?~(result>>1):(result>>1));shift=result=0;do{byte=str.charCodeAt(index++)-63;result|=(byte&0x1f)<<shift;shift+=5}while(byte>=0x20);longitude_change=((result&1)?~(result>>1):(result>>1));lat+=latitude_change;lng+=longitude_change;coordinates.push([lat/factor,lng/factor])}return coordinates}
+</script>
+</body>
+</html>
