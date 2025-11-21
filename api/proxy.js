@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         // 👇 關鍵：把密碼塞進 Header 傳給 n8n
         // 注意：這裡的 'x-api-key' 必須跟你在 n8n 設定的 Header Name 一模一樣
-        'x-api-key': N8N_KEY 
+        'TravelPlan-Secret': N8N_KEY 
       },
       body: JSON.stringify(req.body),
     });
