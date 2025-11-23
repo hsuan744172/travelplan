@@ -113,6 +113,84 @@
             border-radius: 50px; box-shadow: 0 5px 20px rgba(0, 184, 148, 0.4);
             font-weight: bold; font-size: 14px; display: none; align-items: center; gap: 10px;
         }
+
+        /* 手機優化樣式 */
+        @media (max-width: 768px) {
+            #panel {
+                width: 100%;
+                height: auto;
+                top: 0;
+                left: 0;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+                padding: 10px;
+                overflow-y: auto;
+            }
+
+            #map {
+                height: calc(100vh - 300px); /* 地圖高度縮小，讓面板有更多空間 */
+            }
+
+            h3 {
+                font-size: 16px;
+            }
+
+            input[type="text"], input[type="date"], select {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            button#btn {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .search-types {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .dist-badge {
+                margin-bottom: 5px;
+            }
+
+            .info b {
+                font-size: 14px;
+            }
+
+            .info small {
+                font-size: 12px;
+            }
+
+            .saved-tag {
+                font-size: 12px;
+                padding: 4px 6px;
+            }
+
+            .btn-plan-route {
+                font-size: 12px;
+                padding: 6px;
+            }
+
+            #saved-section {
+                margin-top: 15px;
+            }
+
+            #status {
+                font-size: 12px;
+            }
+
+            .tpass-toast {
+                font-size: 12px;
+                padding: 10px 15px;
+            }
+        }
     </style>
 </head>
 <body>
