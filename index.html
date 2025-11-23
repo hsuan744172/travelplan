@@ -8,108 +8,89 @@
         body { margin: 0; font-family: "Microsoft JhengHei", sans-serif; background: #f8f9fa; }
         #map { height: 100vh; width: 100%; z-index: 0;}
         
-        /* 🌟 面板樣式優化：加大、更長 */
+        /* 面板樣式 */
         #panel {
             position: absolute; top: 15px; left: 15px; z-index: 1000;
             background: white; padding: 20px; border-radius: 16px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.15); 
-            width: 360px; /* 加寬 */
-            height: 90vh; /* 強制高度佔螢幕 90% */
-            display: flex; flex-direction: column; /* 讓內部元件垂直排列 */
+            width: 360px; 
+            height: 90vh; 
+            display: flex; flex-direction: column;
             border: 1px solid #fff;
         }
         
-        /* 標題與登入區 */
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        h3 { margin: 0; color: #2c3e50; font-size: 18px; font-weight: 800; }
+        .header-row { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+        h3 { margin: 0; color: #2c3e50; font-size: 20px; font-weight: 800; text-align: center; }
         
-        /* 輸入框優化 */
-        .control-group { margin-bottom: 10px; }
         input[type="text"], input[type="date"], select { 
-            width: 100%; padding: 12px; margin-bottom: 8px; 
+            width: 100%; padding: 12px; margin-bottom: 10px; 
             border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
             background: #fcfcfc; font-size: 14px;
         }
         input:focus, select:focus { outline: none; border-color: #2196F3; background: white; }
         
-        /* 搜尋按鈕 (改成專業藍色) */
         button#btn { 
             width: 100%; padding: 14px; margin-top: 5px;
             background: linear-gradient(135deg, #2196F3, #1976D2); 
             color: white; border: none; border-radius: 8px; 
             cursor: pointer; font-weight: bold; font-size: 15px;
             box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
-            transition: transform 0.1s;
-            flex-shrink: 0; /* 防止按鈕被壓縮 */
+            transition: transform 0.1s; flex-shrink: 0;
         }
         button#btn:active { transform: scale(0.98); }
         button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
 
-        /* 🌟 列表區域優化：填滿剩餘空間、好滑動 */
-        #list-container {
-            flex-grow: 1; /* 自動填滿剩餘高度 */
-            overflow-y: auto; /* 內容多時出現捲軸 */
-            margin-top: 15px;
-            border-top: 1px solid #eee;
-            padding-right: 5px; /* 避免捲軸擋住文字 */
-        }
+        #list-container { flex-grow: 1; overflow-y: auto; margin-top: 10px; padding-right: 5px; }
         
-        /* AI 推薦區塊 */
-        #ai-box { margin-bottom: 10px; display: none; }
-        .ai-title {
-            font-size: 13px; color: #2e7d32; font-weight: 900;
-            margin: 10px 0 8px 0; display: flex; align-items: center;
-        }
-        .ai-card {
-            background: white; border: 1px solid #a5d6a7;
-            border-radius: 8px; margin-bottom: 8px; overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .ai-header {
-            padding: 12px; cursor: pointer; font-size: 14px;
-            font-weight: bold; color: #1b5e20;
-            display: flex; justify-content: space-between; align-items: center;
-            background: #e8f5e9;
-        }
+        /* AI 推薦卡片 */
+        #ai-box { margin-bottom: 15px; display: none; }
+        .ai-title { font-size: 13px; color: #2e7d32; font-weight: 900; margin-bottom: 8px; display: flex; align-items: center; }
+        .ai-card { background: white; border: 1px solid #a5d6a7; border-radius: 8px; margin-bottom: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .ai-header { padding: 12px; cursor: pointer; font-size: 14px; font-weight: bold; color: #1b5e20; display: flex; justify-content: space-between; align-items: center; background: #e8f5e9; }
         .ai-header:hover { background-color: #c8e6c9; }
         .ai-header::after { content: '▼'; font-size: 10px; color: #4caf50; }
-        .ai-reason {
-            padding: 12px; font-size: 14px; color: #444;
-            background: #fff; border-top: 1px dashed #a5d6a7;
-            display: none; line-height: 1.5;
-        }
+        .ai-reason { padding: 12px; font-size: 14px; color: #444; background: #fff; border-top: 1px dashed #a5d6a7; display: none; line-height: 1.5; }
         .ai-card.active .ai-reason { display: block; }
         .ai-card.active .ai-header::after { transform: rotate(180deg); }
 
-        /* 一般列表項目 */
         #status { margin-top: 10px; color: #666; font-size: 13px; text-align: center; flex-shrink: 0;}
         
-        .item { 
-            padding: 15px 10px; /* 加大點擊範圍 */
-            border-bottom: 1px solid #f0f0f0; 
-            cursor: pointer; display: flex; align-items: flex-start; 
-            transition: background 0.2s;
-        }
+        .item { padding: 15px 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; align-items: center; transition: background 0.2s; }
         .item:hover { background: #f5f9ff; }
-        
-        .dist-badge {
-            background: #607d8b; color: white;
-            font-size: 11px; padding: 4px 8px; border-radius: 6px;
-            margin-right: 12px; min-width: 45px; text-align: center;
-            font-weight: 700; margin-top: 2px;
-        }
+        .dist-badge { background: #607d8b; color: white; font-size: 11px; padding: 4px 8px; border-radius: 6px; margin-right: 12px; min-width: 55px; text-align: center; font-weight: 700; flex-shrink: 0; }
         .info { flex-grow: 1; }
         .info b { color: #2c3e50; display: block; margin-bottom: 5px; font-size: 15px; }
         .info small { color: #7f8c8d; display: block; font-size: 13px; margin-bottom: 3px; }
         .nav-link { color: #2196F3; text-decoration: none; font-size: 13px; font-weight: bold; margin-top: 5px; display: inline-block;}
-        
-        /* 捲軸美化 */
         #list-container::-webkit-scrollbar { width: 6px; }
         #list-container::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 3px; }
         #list-container::-webkit-scrollbar-track { background-color: #f1f1f1; }
+
+        /* 🔥 TPASS 提醒框樣式 */
+        .tpass-toast {
+            position: absolute; top: 20px; right: 20px; z-index: 2000;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white; padding: 15px 25px;
+            border-radius: 50px; box-shadow: 0 5px 20px rgba(0, 184, 148, 0.4);
+            font-weight: bold; font-size: 14px;
+            display: none; /* 預設隱藏 */
+            animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .tpass-icon { font-size: 20px; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
+
+<div id="tpassToast" class="tpass-toast" style="display: none;">
+    <span class="tpass-icon">🚌</span>
+    <span>如果要搭車，記得攜帶 TPASS 月票！</span>
+</div>
 
 <div id="panel">
     <div class="header-row">
@@ -158,12 +139,26 @@
         return km.toFixed(1) + "km";
     }
 
+    // 地址轉座標 (修改版：回傳完整地址以供判斷)
     async function getCoordinates(address) {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+        // ⚠️ 加上 accept-language=zh-TW 強制回傳中文，方便判斷縣市
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&accept-language=zh-TW`;
         const res = await fetch(url);
         const data = await res.json();
-        if (data && data.length > 0) return { lat: data[0].lat, lon: data[0].lon };
+        if (data && data.length > 0) {
+            return { 
+                lat: data[0].lat, 
+                lon: data[0].lon,
+                displayName: data[0].display_name // 這是完整的中文地址
+            };
+        }
         throw new Error(`找不到「${address}」`);
+    }
+
+    // 判斷是否為北北基桃
+    function isNorthTaiwan(address) {
+        const cities = ["台北", "臺北", "新北", "基隆", "桃園"];
+        return cities.some(city => address.includes(city));
     }
 
     async function startTrip() {
@@ -171,8 +166,12 @@
         const status = document.getElementById('status');
         const list = document.getElementById('list');
         const aiBox = document.getElementById('ai-box');
+        const tpassToast = document.getElementById('tpassToast');
         const startName = document.getElementById('startInput').value.trim();
         const endName = document.getElementById('endInput').value.trim();
+
+        // 隱藏舊的提醒
+        tpassToast.style.display = 'none';
 
         if (!startName || !endName) {
             status.style.color = "#d32f2f";
@@ -180,7 +179,6 @@
             return;
         }
 
-        // UI 重置
         btn.disabled = true;
         btn.innerText = "資料分析中...";
         list.innerHTML = "";
@@ -190,9 +188,19 @@
         status.innerText = "🔍 正在規劃路徑...";
 
         try {
-            // 1. 轉座標
+            // 1. 轉座標 (含地址判斷)
             const startCoord = await getCoordinates(startName);
             const endCoord = await getCoordinates(endName);
+
+            // 🔥 TPASS 判斷邏輯
+            if (isNorthTaiwan(startCoord.displayName) && isNorthTaiwan(endCoord.displayName)) {
+                tpassToast.style.display = 'flex';
+                // 5秒後自動消失
+                setTimeout(() => {
+                    tpassToast.style.opacity = '0';
+                    setTimeout(() => tpassToast.style.display = 'none', 500); // 等動畫跑完再隱藏
+                }, 5000);
+            }
 
             // 2. OSRM 路徑
             const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoord.lon},${startCoord.lat};${endCoord.lon},${endCoord.lat}?overview=full`;
@@ -212,26 +220,25 @@
 
             status.innerText = "📡 正在搜尋沿途活動...";
 
-            // 3. 呼叫 n8n
-            /// 👇 改成呼叫我們剛剛寫的 Vercel API
+            // 3. 呼叫後端 API
             const API_URL = "/api/proxy"; 
 
             const response = await fetch(API_URL, {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     geometry: geometry,
                     date: document.getElementById('datePicker').value,
                     preference: document.getElementById('prefInput').value,
-                    // 👇👇👇 新增這兩行：把起點座標傳過去 👇👇👇
                     lat: startCoord.lat,
                     lng: startCoord.lon
                 }) 
             });
 
-            if (!response.ok) throw new Error("連線失敗");
+            if (!response.ok) throw new Error(`連線失敗 (${response.status})`);
             const finalData = await response.json();
 
-            // 4. 處理 AI 推薦 (專業風格)
+            // 4. 處理 AI 推薦
             if (finalData.ai_recommendation) {
                 let aiText = finalData.ai_recommendation;
                 try {
