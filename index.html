@@ -20,7 +20,7 @@
         }
         
         .header-row { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
-        h3 { margin: 0; color: #2c3e50; font-size: 20px; font-weight: 800; text-align: center; }
+        h3 { margin: 0; color: #2c3e50; font-size: 18px; font-weight: 800; text-align: center; }
         
         input[type="text"], input[type="date"], select { 
             width: 100%; padding: 12px; margin-bottom: 10px; 
@@ -62,6 +62,8 @@
         .info b { color: #2c3e50; display: block; margin-bottom: 5px; font-size: 15px; }
         .info small { color: #7f8c8d; display: block; font-size: 13px; margin-bottom: 3px; }
         .nav-link { color: #2196F3; text-decoration: none; font-size: 13px; font-weight: bold; margin-top: 5px; display: inline-block;}
+        
+        /* 捲軸美化 */
         #list-container::-webkit-scrollbar { width: 6px; }
         #list-container::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 3px; }
         #list-container::-webkit-scrollbar-track { background-color: #f1f1f1; }
@@ -73,21 +75,16 @@
             color: white; padding: 15px 25px;
             border-radius: 50px; box-shadow: 0 5px 20px rgba(0, 184, 148, 0.4);
             font-weight: bold; font-size: 14px;
-            display: none; /* 預設隱藏 */
-            animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; align-items: center; gap: 10px;
+            display: none; animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            align-items: center; gap: 10px;
         }
         .tpass-icon { font-size: 20px; }
-        
-        @keyframes slideIn {
-            from { transform: translateX(120%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div id="tpassToast" class="tpass-toast" style="display: none;">
+<div id="tpassToast" class="tpass-toast">
     <span class="tpass-icon">🚌</span>
     <span>如果要搭車，記得攜帶 TPASS 月票！</span>
 </div>
@@ -139,23 +136,17 @@
         return km.toFixed(1) + "km";
     }
 
-    // 地址轉座標 (修改版：回傳完整地址以供判斷)
+    // 地址轉座標 (回傳完整地址供 TPASS 判斷)
     async function getCoordinates(address) {
-        // ⚠️ 加上 accept-language=zh-TW 強制回傳中文，方便判斷縣市
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&accept-language=zh-TW`;
         const res = await fetch(url);
         const data = await res.json();
         if (data && data.length > 0) {
-            return { 
-                lat: data[0].lat, 
-                lon: data[0].lon,
-                displayName: data[0].display_name // 這是完整的中文地址
-            };
+            return { lat: data[0].lat, lon: data[0].lon, displayName: data[0].display_name };
         }
         throw new Error(`找不到「${address}」`);
     }
 
-    // 判斷是否為北北基桃
     function isNorthTaiwan(address) {
         const cities = ["台北", "臺北", "新北", "基隆", "桃園"];
         return cities.some(city => address.includes(city));
@@ -170,7 +161,6 @@
         const startName = document.getElementById('startInput').value.trim();
         const endName = document.getElementById('endInput').value.trim();
 
-        // 隱藏舊的提醒
         tpassToast.style.display = 'none';
 
         if (!startName || !endName) {
@@ -188,20 +178,30 @@
         status.innerText = "🔍 正在規劃路徑...";
 
         try {
-            // 1. 轉座標 (含地址判斷)
+            // 1. 轉座標
             const startCoord = await getCoordinates(startName);
             const endCoord = await getCoordinates(endName);
 
-            // 🔥 TPASS 判斷邏輯
+            // 🔥 TPASS 判斷邏輯 (修改版：顯示 10 秒 + 點擊關閉)
             if (isNorthTaiwan(startCoord.displayName) && isNorthTaiwan(endCoord.displayName)) {
                 tpassToast.style.display = 'flex';
-                // 5秒後自動消失
-                setTimeout(() => {
+                // 強制重繪，確保動畫會跑
+                void tpassToast.offsetWidth; 
+                tpassToast.style.opacity = '1';
+                
+                // 設定 10 秒後自動消失
+                const hideTimeout = setTimeout(() => {
                     tpassToast.style.opacity = '0';
-                    setTimeout(() => tpassToast.style.display = 'none', 500); // 等動畫跑完再隱藏
-                }, 5000);
-            }
+                    setTimeout(() => tpassToast.style.display = 'none', 500);
+                }, 10000); // 👈 這裡改成 10000 (10秒)
 
+                // ✨ 新增功能：使用者點一下就立刻關閉 (避免擋路)
+                tpassToast.onclick = () => {
+                    clearTimeout(hideTimeout); // 取消自動倒數
+                    tpassToast.style.opacity = '0';
+                    setTimeout(() => tpassToast.style.display = 'none', 500);
+                };
+            }
             // 2. OSRM 路徑
             const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoord.lon},${startCoord.lat};${endCoord.lon},${endCoord.lat}?overview=full`;
             const routeRes = await fetch(osrmUrl);
@@ -220,7 +220,7 @@
 
             status.innerText = "📡 正在搜尋沿途活動...";
 
-            // 3. 呼叫後端 API
+            // 3. 呼叫後端
             const API_URL = "/api/proxy"; 
 
             const response = await fetch(API_URL, {
@@ -257,14 +257,13 @@
                                     <div class="ai-reason">${rec.reason}</div>
                                 </div>`;
                         });
-
                         aiBox.innerHTML = aiHtml;
                         aiBox.style.display = "block";
                     }
                 } catch(e) { console.error(e); }
             }
 
-            // 5. 渲染完整列表
+            // 5. 渲染列表 (含全程導航按鈕)
             const spots = finalData.spots || [];
             if (spots.length === 0 || spots[0].category === "提示") {
                 status.style.color = "#e74c3c";
@@ -274,9 +273,24 @@
                 status.innerText = `🎉 已找到 ${spots.length} 個活動 (依距離排序)`;
                 let listHtml = "";
                 
+                // 🔥 新增：Google Maps 全程導航按鈕 (取前3個)
+                if (spots.length > 0) {
+                    const waypoints = spots.slice(0, 3).map(s => `${s.lat},${s.lng}`).join('|');
+                    const fullTripUrl = `https://www.google.com/maps/dir/?api=1&origin=${startCoord.lat},${startCoord.lon}&destination=${endCoord.lat},${endCoord.lon}&waypoints=${waypoints}&travelmode=driving`;
+                    
+                    listHtml += `
+                        <a href="${fullTripUrl}" target="_blank" style="
+                            display: block; margin-bottom: 15px; padding: 12px; 
+                            background: #27ae60; color: white; text-align: center; 
+                            border-radius: 8px; text-decoration: none; font-weight: bold;
+                            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);">
+                            🚗 一鍵開啟 Google Maps 全程導航
+                        </a>`;
+                }
+
                 spots.forEach((spot, index) => {
                     if (!spot.lat) return;
-                    const googleMapUrl = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}`;
+                    const googleMapUrl = `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lng}`;
                     const distText = formatDistance(spot.distance);
 
                     const marker = L.marker([spot.lat, spot.lng])
@@ -295,7 +309,7 @@
                                 <b>${spot.name}</b>
                                 <small>📅 ${spot.time}</small>
                                 <small>📍 ${spot.location}</small>
-                                <a href="${googleMapUrl}" target="_blank" class="nav-link" onclick="event.stopPropagation()">↗ Google 導航</a>
+                                <a href="${googleMapUrl}" target="_blank" class="nav-link" onclick="event.stopPropagation()">↗ 單點導航</a>
                             </div>
                         </div>`;
                 });
