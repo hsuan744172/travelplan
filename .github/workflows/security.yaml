@@ -1,0 +1,28 @@
+name: Security Scan (Gitleaks)
+
+# 觸發條件：當 Push 或 Pull Request 到 main 分支時執行
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  # 允許手動觸發
+  workflow_dispatch:
+
+jobs:
+  gitleaks:
+    name: Gitleaks Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # 重要：抓取完整的 git 歷史紀錄，才能掃描過去的 commit
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 如果發現 Key，讓流程失敗 (Fail)，這樣你就會收到警告
+          GITLEAKS_ENABLE_SUMMARY: true
+          GITLEAKS_FAIL_ON_ERROR: true

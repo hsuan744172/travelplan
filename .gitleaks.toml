@@ -1,0 +1,10 @@
+title = "Gitleaks Config"
+
+[allowlist]
+description = "允許 Firebase 公開金鑰"
+regexes = [
+    '''AIza[0-9A-Za-z-_]{35}''', # 這是 Google API Key 的格式
+    '''firebaseConfig''',
+    '''messagingSenderId''',
+    '''appId'''
+]
