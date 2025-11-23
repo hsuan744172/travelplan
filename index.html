@@ -287,13 +287,9 @@
             });
 
             if (!response.ok) throw new Error(`連線失敗`);
-            const finalData = await response.json();
+            let rawData = await response.json();
 
-            // 處理 AI 推薦
-            if (finalData.ai_recommendation) {
-                // ... (AI 代碼保持原樣，略) ...
-                // 為了簡潔，這裡假設 AI 回傳邏輯與之前相同，或者您可以直接移除 AI 區塊如果不需要
-            }
+            let finalData = Array.isArray(rawData) ? rawData[0] : rawData;
 
             // 渲染列表
             const spots = finalData.spots || [];
