@@ -160,8 +160,17 @@
                 margin-bottom: 5px;
             }
 
-            .info b {
-                font-size: 14px;
+            /* 🔥🔥🔥 唯一修改處：解決標題重疊 🔥🔥🔥 */
+            .info b { 
+                color: #2c3e50; 
+                display: block; 
+                margin-bottom: 4px; 
+                font-size: 15px; 
+                
+                /* 關鍵：右邊留出 45px 空間給標籤，遇到標籤自動換行 */
+                padding-right: 45px;
+                line-height: 1.4;
+                word-wrap: break-word;
             }
 
             .info small {
