@@ -1,7 +1,0 @@
-title = "Gitleaks Config"
-
-[allowlist]
-description = "允許 Firebase 公開金鑰"
-regexes = [
-    '''firebaseConfig'''
-]
