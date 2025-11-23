@@ -1,0 +1,2 @@
+GEMINI_API_KEY="AIzaSyD-FAKE-KEY-FOR-TESTING-12345"
+N8N_SECRET="my-super-secret-password"
